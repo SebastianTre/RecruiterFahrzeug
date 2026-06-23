@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: headFragment}"></head>
+<body>
+<div class="content">
+    <div th:replace="~{fragments/header :: navFragment}"></div>
+    <div class="top">
+        <h1>Reservierung bearbeiten</h1>
+    </div>
+
+    <form th:action="@{/reservierung/update}" th:object="${reservierung}" method="post">
+        <input type="hidden" th:field="*{id}"> <!-- Ohne dieses Feld weiß der Controller nicht, welche Reservierung er updaten soll. -->
+        <table>
+
+            <!-- Dropdown für Fahrzeug-Auswahl ANFANG-->
+            <tr>
+                <td><label for="fahrzeug">Fahrzeug *</label></td>
+                <td>
+
+                    <select name="fahrzeugId" id="fahrzeug" class="form-control select2" required>
+                        <option value="">Fahrzeug auswählen</option>
+                        <option th:each="f : ${fahrzeuge}"
+                                th:value="${f.id}"
+                                th:text="${f.unterscheidungszeichen + ' - ' + f.erkennungsnummer + ' ' + f.ziffern}"
+                                th:selected="${reservierung.fahrzeugId != null && reservierung.fahrzeugId == f.id}">
+                        </option>
+                    </select>
+                </td>
+                <script>
+                    $(document).ready(function() {
+                        $('.select2').select2({
+                            maximumInputLength: 300,
+                            width: '100%'
+                        });
+                    });
+                </script>
+            </tr>
+            <!-- Dropdown für Fahrzeug-Auswahl ENDE-->
+            <tr>
+                <td><label for="beginn">Beginn *</label></td>
+                <td>
+                    <input type="datetime-local" id="beginn" name="beginn" th:value="${reservierung.beginn}" class="form-control" required>
+                </td>
+            </tr>
+            <tr>
+                <td><label for="ende">Ende *</label></td>
+                <td>
+                    <input type="datetime-local" id="ende" name="ende" th:value="${reservierung.ende}" class="form-control" required>
+                </td>
+            </tr>
+            <!-- Mitarbeiter -->
+            <tr>
+                <td><label for="mitarbeiter">Mitarbeiter *</label></td>
+                <td>
+                    <input type="text" id="mitarbeiter" th:field="*{mitarbeiter}" class="form-control" required maxlength="50">
+                    <div th:if="${#fields.hasErrors('mitarbeiter')}" class="text-danger">
+                        <p th:errors="*{mitarbeiter}"></p>
+                    </div>
+                </td>
+            </tr>
+            <!-- Anmerkung -->
+            <tr>
+                <td><label for="anmerkung">Anmerkung</label></td>
+                <td>
+                    <textarea id="anmerkung" th:field="*{anmerkung}" class="form-control" rows="4" maxlength="500"></textarea>
+                    <div th:if="${#fields.hasErrors('anmerkung')}" class="text-danger">
+                        <p th:errors="*{anmerkung}"></p>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        <p>
+            <button type="submit" name="action" value="update" class="btn btn-dav">Ändern</button>&nbsp;&nbsp;
+            <a href="/reservierung" class="btn btn-dav2">Abbrechen</a>
+        </p>
+    </form>
+    <div th:if="${errorMessage}" class="alert alert-danger">
+        <p th:text="${errorMessage}"></p>
+    </div>
+</div>
+<div th:replace="~{fragments/footer :: footerFragment}"></div>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+  <head th:replace="~{fragments/header :: headFragment}"></head>
+  <body>
+    <style>
+      /* Header mit Firmenlogo */
+      .header {
+          background-color: #f8f9fa;
+          padding: 20px 0;
+          text-align: center;
+      }
+
+      .header img {
+          max-height: 100px;
+          width: auto;
+      }
+
+      .header-title {
+        margin-bottom: 30px;
+        text-align: center;
+      }
+    </style>
+
+
+    <!-- Header mit Firmenlogo -->
+    <header class="header">
+      <img src="/img/Beispiellogo.png" alt="Firmenlogo">
+    </header>
+
+    <!-- Hauptinhalt -->
+    <div class="container content">
+      <h1 class="header-title text-center">Willkommen zur Fahrzeugverwaltung</h1>
+      <p class="text-center">Wählen Sie eine Kategorie:</p>
+
+      <!-- Kacheln als Bootstrap Cards -->
+      <div class="row">
+        <!-- Fahrzeuge-Kachel -->
+        <div class="col-md-4 mb-4">
+          <a href="/fahrzeug" class="text-decoration-none">
+            <div class="card-category" style="background-image: url('/img/nummernschilder.jpeg');">
+              <div class="card-overlay">
+                <h2>Fahrzeuge</h2>
+              </div>
+            </div>
+          </a>
+        </div>
+        <!-- Termine-Kachel -->
+        <div class="col-md-4 mb-4">
+          <a href="/termin" class="text-decoration-none">
+            <div class="card-category" style="background-image: url('/img/termine.png');">
+              <div class="card-overlay">
+                <h2>Termine</h2>
+              </div>
+            </div>
+          </a>
+        </div>
+        <!-- Reservierungen-Kachel -->
+        <div class="col-md-4 mb-4">
+          <a href="/reservierung" class="text-decoration-none">
+            <div class="card-category" style="background-image: url('/img/reservierung.jpg');">
+              <div class="card-overlay">
+                <h2>Reservierungen</h2>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+
+      <div class="row">
+        <!-- Überschneidungen -->
+        <div th:if="${!#lists.isEmpty(overlapping)}" class="col-md-12 mb-3 p-3" style="border: 4px solid var(--dav-rot);">
+          <h4>Es gibt Überschneidungen!</h4>
+          <table class="table table-striped" id="fahrzeugTable">
+            <thead class="thead-light">
+            <tr>
+              <th scope="col" class="sortable" data-column="termin" title="Klicken, um nach Terminbeginn zu sortieren">Termin <span>▼</span></th>
+              <th scope="col" class="sortable" data-column="reservierung" title="Klicken, um nach Reservierungsbeginn zu sortieren">Reservierung <span></span></th>
+              <th scope="col" class="sortable" data-column="fahrzeug" title="Klicken, um nach Fahrzeug zu sortieren">Fahrzeug <span></span></th>
+            </tr>
+            </thead>
+            <tbody>
+              <th:block th:each="match, iterStat : ${overlapping}">
+                <tr>
+                  <td>
+                    <p>Beginn: <strong><span th:text="${#temporals.format(termineOverlapping[iterStat.index].beginn, 'dd.MM.yyyy HH:mm')}"></span></strong></p>
+                    <p>Ende: &ensp;<strong> <span th:text="${#temporals.format(termineOverlapping[iterStat.index].ende, 'dd.MM.yyyy HH:mm')}"></span></strong></p>
+                    <p th:text="'Mitarbeiter: ' + ${termineOverlapping[iterStat.index].mitarbeiter}"></p>
+                    <a th:href="@{/termin/edit/{id}(id=${termineOverlapping[iterStat.index].id})}" class="btn btn-dav btn-sm btn-dav-with">Ändern</a>
+                  </td>
+                  <td>
+                    <p>Beginn: <strong><span th:text="${#temporals.format(reservierungenOverlapping[iterStat.index].beginn, 'dd.MM.yyyy HH:mm')}"></span></strong></p>
+                    <p>Ende: &ensp;<strong> <span th:text="${#temporals.format(reservierungenOverlapping[iterStat.index].ende, 'dd.MM.yyyy HH:mm')}"></span></strong></p>
+                    <p th:text="'Mitarbeiter: ' + ${reservierungenOverlapping[iterStat.index].mitarbeiter}"></p>
+                    <a th:href="@{/reservierung/edit/{id}(id=${reservierungenOverlapping[iterStat.index].id})}" class="btn btn-dav btn-sm btn-dav-with">Ändern</a>
+                  </td>
+                  <td>
+                    <div class="license-plate d-flex align-items-center">
+                      <!-- Blauer Rand -->
+                      <div class="blue-band d-flex flex-column justify-content-center">
+                        <div class="eu-flag"></div>
+                        <div class="country-code">D</div>
+                      </div>
+                      <!-- Nummernschild Inhalt -->
+                      <div class="plate-content">
+                        <span class="region">
+                          <!-- Unterscheidungszeichen -->
+                          <span th:text="${fahrzeugeOverlapping[iterStat.index].unterscheidungszeichen}"></span>
+                        </span>
+                        <div class="stickers">
+                          <div class="inspection-sticker"></div>
+                          <div class="seal-sticker"></div>
+                        </div>
+                        <span class="identifier">
+                          <span th:text="${fahrzeugeOverlapping[iterStat.index].erkennungsnummer}"></span>
+                          <span th:text="' ' + ${fahrzeugeOverlapping[iterStat.index].ziffern}"></span>
+                        </span>
+                      </div>
+                    </div>
+                    <p><strong><span th:text="${fahrzeugeOverlapping[iterStat.index].hersteller}"></span>
+                      <span th:text="${fahrzeugeOverlapping[iterStat.index].modell}"></span></strong></p>
+                  </td>
+                </tr>
+              </th:block>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Termine in den nächsten Tagen -->
+        <div th:if="${!#lists.isEmpty(termineKommend)}" class="col-md-6">
+          <h4>Termine der nächsten 14 Tage</h4>
+          <ul class="list-group">
+            <th:block th:each="termin, iterStat : ${termineKommend}">
+              <li class="list-group-item mp-3">
+                <div class="row">
+                  <div class="col-md-12">
+                    <p class="text-center font-weight-bold" th:text="${#temporals.format(termin.beginn, 'dd.MM.yyyy HH:mm')} + ' - ' + ${#temporals.format(termin.ende, 'dd.MM.yyyy HH:mm')}"></p>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="license-plate d-flex align-items-center">
+                      <!-- Blauer Rand -->
+                      <div class="blue-band d-flex flex-column justify-content-center">
+                        <div class="eu-flag"></div>
+                        <div class="country-code">D</div>
+                      </div>
+                      <!-- Nummernschild Inhalt -->
+                      <div class="plate-content">
+                        <span class="region">
+                          <!-- Unterscheidungszeichen -->
+                          <span th:text="${terminFahrzeugeKommend[iterStat.index].unterscheidungszeichen}"></span>
+                        </span>
+                        <div class="stickers">
+                          <div class="inspection-sticker"></div>
+                          <div class="seal-sticker"></div>
+                        </div>
+                        <span class="identifier">
+                          <span th:text="${terminFahrzeugeKommend[iterStat.index].erkennungsnummer}"></span>
+                          <span th:text="' ' + ${terminFahrzeugeKommend[iterStat.index].ziffern}"></span>
+                        </span>
+                      </div>
+                    </div>
+                    <p><strong><span th:text="${terminFahrzeugeKommend[iterStat.index].hersteller}"></span>
+                      <span th:text="${terminFahrzeugeKommend[iterStat.index].modell}"></span></strong></p>
+                  </div>
+                  <div class="col-md-6">
+                    <p class="text-center" th:text="${termin.mitarbeiter}"></p>
+                    <p class="text-center font-weight-bold" th:text="${termin.art}"></p>
+                  </div>
+                </div>
+              </li>
+            </th:block>
+          </ul>
+        </div>
+        <div th:if="${#lists.isEmpty(termineKommend)}" class="col-md-6">
+          <p>In den nächsten 14 Tagen gibt es keine Termine.</p>
+        </div>
+
+        <!-- Reservierungen in den nächsten Tagen -->
+        <div th:if="${!#lists.isEmpty(reservierungenKommend)}" class="col-md-6">
+          <h4>Reservierungen der nächsten 14 Tage</h4>
+          <ul class="list-group">
+            <th:block th:each="reservierung, iterStat : ${reservierungenKommend}">
+              <li class="list-group-item mp-3">
+                <div class="row">
+                  <div class="col-md-12">
+                    <p class="text-center font-weight-bold" th:text="${#temporals.format(reservierung.beginn, 'dd.MM.yyyy HH:mm')} + ' - ' + ${#temporals.format(reservierung.ende, 'dd.MM.yyyy HH:mm')}"></p>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="license-plate d-flex align-items-center">
+                      <!-- Blauer Rand -->
+                      <div class="blue-band d-flex flex-column justify-content-center">
+                        <div class="eu-flag"></div>
+                        <div class="country-code">D</div>
+                      </div>
+                      <!-- Nummernschild Inhalt -->
+                      <div class="plate-content">
+                        <span class="region">
+                          <!-- Unterscheidungszeichen -->
+                          <span th:text="${reservierungFahrzeugeKommend[iterStat.index].unterscheidungszeichen}"></span>
+                        </span>
+                        <div class="stickers">
+                          <div class="inspection-sticker"></div>
+                          <div class="seal-sticker"></div>
+                        </div>
+                        <span class="identifier">
+                          <span th:text="${reservierungFahrzeugeKommend[iterStat.index].erkennungsnummer}"></span>
+                          <span th:text="' ' + ${reservierungFahrzeugeKommend[iterStat.index].ziffern}"></span>
+                        </span>
+                      </div>
+                    </div>
+                    <p><strong><span th:text="${reservierungFahrzeugeKommend[iterStat.index].hersteller}"></span>
+                      <span th:text="${reservierungFahrzeugeKommend[iterStat.index].modell}"></span></strong></p>
+                  </div>
+                  <div class="col-md-6">
+                    <p class="text-center" th:text="${reservierung.mitarbeiter}"></p>
+                  </div>
+                </div>
+              </li>
+            </th:block>
+          </ul>
+        </div>
+        <div th:if="${#lists.isEmpty(reservierungenKommend)}" class="col-md-6">
+          <p>In den nächsten 14 Tagen gibt es keine Reservierungen.</p>
+        </div>
+      </div>
+    </div>
+    <div th:replace="~{fragments/footer :: footerFragment}"></div>
+  </body>
+</html>

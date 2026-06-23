@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: headFragment}"></head>
+<body>
+<div class="content">
+    <div th:replace="~{fragments/header :: navFragment}"></div>
+    <div class="top">
+        <h1>Fahrzeugliste</h1>
+        <p>Anzahl der Fahrzeuge: <span th:text="${#lists.size(fahrzeug)}"></span></p>
+        <p><a th:href="@{/fahrzeug/add}" class="btn btn-dav">Fahrzeug hinzufügen</a></p>
+    </div>
+    <table class="table table-striped" id="fahrzeugTable">
+        <thead class="thead-light">
+        <tr>
+            <th scope="col" class="sortable" data-column="kennzeichen" title="Klicken, um nach Kennzeichen zu sortieren">Kennzeichen <span>▼</span></th>
+            <th scope="col" class="sortable" data-column="hersteller" title="Klicken, um nach Hersteller zu sortieren">Hersteller <span></span></th>
+            <th scope="col" class="sortable" data-column="modell" title="Klicken, um nach Modell zu sortieren">Modell <span></span></th>
+            <th scope="col">Aktion</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(fahrzeug)}">
+            <td colspan="4" class="text-center">Es sind keine Fahrzeuge eingetragen.</td>
+        </tr>
+        <tr th:each="fahrzeug : ${fahrzeug}">
+            <td>
+                <div class="license-plate d-flex align-items-center">
+                    <!-- Blauer Rand -->
+                    <div class="blue-band d-flex flex-column justify-content-center">
+                        <div class="eu-flag"></div>
+                        <div class="country-code">D</div>
+                    </div>
+                    <!-- Nummernschild Inhalt -->
+                    <div class="plate-content">
+                        <span class="region">
+                          <!-- Unterscheidungszeichen -->
+                          <span th:text="${fahrzeug.unterscheidungszeichen}"></span>
+                        </span>
+                        <div class="stickers">
+                            <div class="inspection-sticker"></div>
+                            <div class="seal-sticker"></div>
+                        </div>
+                        <span class="identifier">
+                          <span th:text="${fahrzeug.erkennungsnummer}"></span>
+                          <span th:text="' ' + ${fahrzeug.ziffern}"></span>
+                        </span>
+                    </div>
+                </div>
+            </td>
+            <td th:text="${fahrzeug.hersteller}"></td>
+            <td th:text="${fahrzeug.modell}"></td>
+            <td>
+                <button class="btn btn-dav1 btn-sm btn-dav-with" data-toggle="modal" data-target="#deleteModal"
+                        th:data-id="${fahrzeug.id}"
+                        th:data-unterscheidungszeichen="${fahrzeug.unterscheidungszeichen}"
+                        th:data-erkennungsnummer="${fahrzeug.erkennungsnummer}"
+                        th:data-ziffern="${fahrzeug.ziffern}"
+                        th:data-hersteller="${fahrzeug.hersteller}"
+                        th:data-modell="${fahrzeug.modell}">
+                    <!--                      th:data-termine="${#lists.size(fahrzeug.termin)}">-->
+                    Löschen
+                </button>
+                &nbsp;&nbsp;
+                &nbsp;&nbsp;
+                <a th:href="@{/fahrzeug/edit/{id}(id=${fahrzeug.id})}" class="btn btn-dav btn-sm btn-dav-with">Ändern</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="pagination-container text-center mt-3">
+        <button id="firstPage" class="btn btn-dav2 btn-sm">Erste Seite</button>
+        <button id="prevPage" class="btn btn-dav2 btn-sm">Zurück</button>
+        <span id="pageNumbers"></span>
+        <button id="nextPage" class="btn btn-dav2 btn-sm">Weiter</button>
+        <button id="lastPage" class="btn btn-dav2 btn-sm">Letzte Seite</button>
+
+        <!-- Dropdown für Einträge pro Seite -->
+        <select id="rowsPerPageSelect" class="ml-3 form-control form-control-sm" style="width: auto; display: inline-block;">
+            <option value="5">5 Einträge</option>
+            <option value="10" selected>10 Einträge</option>
+            <option value="15">15 Einträge</option>
+            <option value="20">20 Einträge</option>
+        </select>
+    </div>
+
+    <!-- Modal für Erfolgsnachricht ANFANG-->
+    <div th:if="${successMessage}" class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="successModalLabel">Erfolg</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p th:text="${successMessage}"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-dav2" data-dismiss="modal">Schließen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal für Erfolgsnachricht ENDE -->
+
+    <!-- Modal für Delete Confirmation ANFANG -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Fahrzeug löschen</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Möchten Sie das Fahrzeug wirklich löschen?</p>
+                    <p><strong><span id="kennzeichen"></span> (<span id="hersteller"></span> <span id="modell"></span>)</strong></p>
+                    <p class="">Termine und Reservierungen für dieses Fahrzeug bleiben erhalten.</p>
+                    <!-- Hinweis auf Termine -->
+                    <div id="terminInfo" style="display: none;">
+                        <p><strong>Hinweis:</strong> Es gibt noch <span id="anzahlTermine"></span> Termin(e) für dieses Fahrzeug. Diese bleiben erhalten.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Abbrechen</button>
+                    <a id="confirmDeleteButton" href="#" class="btn btn-dav1">Löschen</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal für Delete Confirmation ENDE -->
+
+</div>
+<div th:replace="~{fragments/footer :: footerFragment}"></div>
+
+<script th:inline="javascript">
+    // das Modal öffnen, wenn eine Erfolgsmeldung vorhanden ist
+    if ([[${successMessage}]] != '') {
+        $('#successModal').modal('show');
+    }
+</script>
+
+<script>
+    // Modal wird mit den Fahrzeugdaten gefüllt, wenn der Löschen-Button angeklickt wird
+    $('#deleteModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Button, der das Modal ausgelöst hat
+        var fahrzeugId = button.data('id');
+        var unterscheidungszeichen = button.data('unterscheidungszeichen');
+        var erkennung = button.data('erkennungsnummer');
+        var ziffern = button.data('ziffern');
+        var hersteller = button.data('hersteller');
+        var modell = button.data('modell');
+        var termineCount = button.data('termine');
+
+        // das Kennzeichen im Modal mit Trennzeichen setzen
+        var kennzeichenFormatted = unterscheidungszeichen + " - " + erkennung + " " + ziffern;
+
+        // die Werte in die Modal-Elemente setzen
+        var modal = $(this);
+        modal.find('#kennzeichen').text(kennzeichenFormatted);
+        modal.find('#hersteller').text(hersteller);
+        modal.find('#modell').text(modell);
+
+        // Überprüfen, ob es Termine gibt und entsprechende Anzeige
+        if (termineCount > 0) {
+          modal.find('#terminInfo').show();
+          modal.find('#anzahlTermine').text(termineCount);
+        } else {
+          modal.find('#terminInfo').hide();
+        }
+
+        // den Löschen-Button anpassen, damit er die richtige URL enthält
+        modal.find('#confirmDeleteButton').attr('href', '/fahrzeug/delete/' + fahrzeugId);
+    });
+</script>
+
+<script>
+<!-- ---------- Sortierung und Pagination ANFANG---------- -->
+document.addEventListener("DOMContentLoaded", function () {
+    let rowsPerPage = 10;
+    let tableRows = Array.from(document.querySelectorAll("tbody tr:not([th\\:if])"));
+    let totalEntries = tableRows.length;
+    let totalPages = Math.ceil(totalEntries / rowsPerPage);
+    let currentPage = 1;
+    let currentSort = { column: '', direction: '' };
+
+    const firstButton = document.getElementById("firstPage");
+    const prevButton = document.getElementById("prevPage");
+    const nextButton = document.getElementById("nextPage");
+    const lastButton = document.getElementById("lastPage");
+    const pageNumbersContainer = document.getElementById("pageNumbers");
+    const rowsPerPageSelect = document.getElementById("rowsPerPageSelect");
+    const tableHeaders = document.querySelectorAll(".sortable");
+
+    function updateTableRows() {
+        tableRows = Array.from(document.querySelectorAll("tbody tr:not([th\\:if])"));
+        totalEntries = tableRows.length;
+        totalPages = Math.ceil(totalEntries / rowsPerPage);
+    }
+
+    function displayPage(page) {
+        const start = (page - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+
+        tableRows.forEach((row, index) => {
+            row.style.display = (index >= start && index < end) ? "" : "none";
+        });
+
+        currentPage = page;
+        updatePaginationButtons();
+    }
+
+    function updatePaginationButtons() {
+        pageNumbersContainer.innerHTML = "";
+
+        for (let i = 1; i <= totalPages; i++) {
+            const pageButton = document.createElement("span");
+            pageButton.textContent = i;
+            pageButton.classList.add("page-number");
+            if (i === currentPage) pageButton.classList.add("active");
+
+            pageButton.addEventListener("click", () => displayPage(i));
+            pageNumbersContainer.appendChild(pageButton);
+        }
+
+        // Buttons aktivieren/deaktivieren
+        firstButton.disabled = currentPage === 1 || totalPages <= 1;
+        prevButton.disabled = currentPage === 1 || totalPages <= 1;
+        nextButton.disabled = currentPage === totalPages || totalPages <= 1;
+        lastButton.disabled = currentPage === totalPages || totalPages <= 1;
+    }
+
+    function sortTable(column, direction) {
+        const getCellValue = (row, column) => {
+            if (column === 'kennzeichen') {
+                return row.querySelector('.plate-content').innerText.trim();
+            }
+            const index = getColumnIndex(column);
+            return row.querySelector(`td:nth-child(${index})`).innerText.trim().toLowerCase();
+        };
+
+        tableRows.sort((a, b) => {
+            const valA = getCellValue(a, column);
+            const valB = getCellValue(b, column);
+            if (valA < valB) return direction === 'asc' ? -1 : 1;
+            if (valA > valB) return direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        const tbody = document.querySelector("tbody");
+        tbody.innerHTML = ""; // Leeren und neu füllen
+        tableRows.forEach(row => tbody.appendChild(row));
+
+        // Nach Sortierung die erste Seite anzeigen
+        displayPage(1);
+    }
+
+    function getColumnIndex(column) {
+        switch (column) {
+            case 'hersteller': return 2;
+            case 'modell': return 3;
+            default: return 1; // Kennzeichen
+        }
+    }
+
+    function updateSortIcons(activeHeader, direction) {
+        tableHeaders.forEach(header => {
+            const icon = header.querySelector('span');
+            icon.innerHTML = ''; // Reset icons
+        });
+        const icon = activeHeader.querySelector('span');
+        icon.innerHTML = direction === 'asc' ? '▼' : '▲';
+    }
+
+    // Event-Listener für Sortierung
+    tableHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+            const column = header.getAttribute('data-column');
+            let direction = 'asc';
+            if (currentSort.column === column && currentSort.direction === 'asc') {
+                direction = 'desc';
+            }
+
+            sortTable(column, direction);
+            updateSortIcons(header, direction);
+            currentSort = { column, direction };
+        });
+    });
+
+    // Dropdown-Änderung für Einträge pro Seite
+    rowsPerPageSelect.addEventListener("change", function () {
+        rowsPerPage = parseInt(this.value);
+        totalPages = Math.ceil(totalEntries / rowsPerPage);
+        displayPage(1);
+    });
+
+    // Event-Listener für Pagination Buttons
+    firstButton.addEventListener("click", () => displayPage(1));
+    prevButton.addEventListener("click", () => { if (currentPage > 1) displayPage(currentPage - 1); });
+    nextButton.addEventListener("click", () => { if (currentPage < totalPages) displayPage(currentPage + 1); });
+    lastButton.addEventListener("click", () => displayPage(totalPages));
+
+    // Prüfen, ob eine Erfolgsmeldung nach dem Hinzufügen vorliegt (Seite zur letzten Seite springen)
+    if ([[${successMessage != null}]] && totalPages > 1) {
+        displayPage(totalPages);
+    } else {
+        displayPage(1);  // Standardmäßig erste Seite anzeigen
+    }
+});
+<!-- ---------- Sortierung und Pagination ENDE---------- -->
+</script>
+
+</body>
+</html>

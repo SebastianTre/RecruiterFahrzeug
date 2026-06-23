@@ -1,0 +1,369 @@
+:root {
+    --dav-blau: #1d398d;
+    --dav-blau-hover: #3a72b6;
+    --dav-blau-shadow: rgba(0, 51, 153, 0.5);
+
+    --dav-rot: #b72026;
+    --dav-rot-hover: #d54c57;
+    --dav-rot-shadow: rgba(183, 32, 38, 0.5);
+
+    --dav-grau: #818285;
+    --dav-grau-hover: #a6a7aa;
+    --dav-grau-shadow: rgba(129, 130, 133, 0.5);
+}
+
+html, body {
+    /*
+    justify-content: center;
+    align-items: center;
+    */
+    display: flex;
+    flex-direction: column;
+
+    height: 100%;
+    margin: 0;
+}
+
+/* Der Inhaltscontainer wächst */
+.content {
+    padding-bottom: 10px;
+    flex-grow: 1;
+}
+
+.top {
+    padding: 10px;
+}
+
+footer {
+    /*
+    position: fixed;
+    */
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #343a40;
+    /*
+    background-color: #f8f9fa;
+    */
+    text-align: center;
+    padding: 10px 0;
+    border-top: 1px solid #ddd;
+    color: white;
+}
+.footer a {
+    color: #adb5bd;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    color: white;
+}
+
+.footer-container {
+    margin-top: 20px;
+}
+
+.footer .footer-bottom {
+    border-top: 1px solid #495057;
+    padding-top: 20px;
+    margin-top: 20px;
+    font-size: 0.9em;
+}
+
+.btn:disabled {
+    cursor: not-allowed !important;
+}
+
+/* Buttons in Firmenfarben ANFANG */
+.btn-dav-with {
+    width: 70px;
+}
+
+.btn-dav {
+    background-color: var(--dav-blau); /* Firmen Blau */
+    border-color: var(--dav-blau);
+    color: white;
+}
+
+.btn-dav:hover {
+    background-color: var(--dav-blau-hover); /* Etwas heller als das ursprüngliche Blau (Helligkeit 50% mehr in Richtung Weiß) */
+    border-color: var(--dav-blau-hover);
+    color: white;
+}
+
+.btn-dav:focus, .btn-dav.focus {
+    box-shadow: 0 0 0 0.2rem var(--dav-blau-shadow); /* Ein sanfter Schlagschatten */
+}
+
+.btn-dav1 {
+    background-color: var(--dav-rot); /* Firmen Rot */
+    border-color: var(--dav-rot);
+    color: white;
+}
+
+.btn-dav1:hover {
+    background-color: var(--dav-rot-hover); /* Etwas heller als das ursprüngliche Rot (Helligkeit 50% mehr in Richtung Weiß) */
+    border-color: var(--dav-rot-hover);
+    color: white;
+}
+
+.btn-dav1:focus, .btn-dav1.focus {
+    box-shadow: 0 0 0 0.2rem var(--dav-rot-shadow); /* Ein sanfter Schlagschatten */
+}
+
+.btn-dav2 {
+    background-color: var(--dav-grau); /* Firmen Grau */
+    border-color: var(--dav-grau);
+    color: white;
+}
+
+.btn-dav2:hover {
+    background-color: var(--dav-grau-hover); /* Etwas heller als das ursprüngliche Grau (Helligkeit 50% mehr in Richtung Weiß) */
+    border-color: var(--dav-grau-hover);
+    color: white;
+}
+
+.btn-dav2:focus, .btn-dav2.focus {
+    box-shadow: 0 0 0 0.2rem var(--dav-grau-shadow); /* Ein sanfter Schlagschatten */
+}
+/* Buttons in Firmenfarben ENDE */
+
+
+/* Cursor-Pointer für sortierbare Spalten */
+th.sortable {
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.2s ease;
+}
+
+/* Leichter Hintergrundwechsel beim Hover */
+th.sortable:hover {
+    background-color: #f1f1f1; /* Helles Grau für Hover-Effekt */
+}
+
+/* Styling für Sortierpfeile */
+th.sortable span {
+    margin-left: 5px;
+    font-size: 12px;
+    color: gray;
+}
+
+th.sortable span::before {
+    content: '';
+}
+
+/* Aktive Sortierspalte */
+th.sortable span.asc::before {
+    content: '▼';
+    color: black;
+}
+
+th.sortable span.desc::before {
+    content: '▲';
+    color: black;
+}
+
+/* ---------- Pagination ANFANG---------- */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap; /* Für bessere Darstellung bei kleineren Bildschirmen */
+}
+
+.pagination-container button, .pagination-container select {
+    cursor: pointer;
+}
+
+.page-number {
+    padding: 8px 12px;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: white;
+    transition: background-color 0.2s ease;
+}
+
+.page-number:hover:not(.disabled) {
+    background-color: #3a72b6;
+    color: white;
+}
+
+.page-number.active {
+    background-color: #1d398d; /* Firmen-Blau */
+    color: white;
+    border-color: #1d398d; /* Firmen-Blau */
+}
+
+.page-number.disabled {
+    cursor: not-allowed;
+    color: #aaa;
+    background-color: #f8f9fa;
+}
+/* ---------- Pagination ENDE---------- */
+
+
+/* ---------- Nummernschild ANFANG ---------- */
+@font-face {
+    font-family: 'FE-Schrift';
+    src: url('https://raw.githubusercontent.com/AutomobilForum/FE-Schrift/master/FESchrift.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.license-plate {
+    width: 202px; /* Länge des Nummernschilds */
+    height: 35px; /* Höhe */
+    background-color: white;
+    border: 2px solid black; /* Schwarzer Rand */
+    border-radius: 4px;
+    overflow: hidden;
+    ont-family: 'FE-Schrift', Arial, sans-serif; /* FE-Schrift mit Fallback */
+    font-size: 18px; /* Schriftgröße */
+    color: black;
+    display: flex;
+    align-items: center;
+}
+
+/* Blauer Rand */
+.blue-band {
+    width: 32px; /* Breite des blauen Rands */
+    height: 100%;
+    background-color: #003399; /* EU-Flaggenblau */
+    text-align: center;
+    color: white;
+    font-weight: bold;
+}
+
+.eu-flag {
+    width: 22px;
+    height: 22px;
+    background-image: url('/img/Flag_of_Europe.svg.webp');
+    background-size: cover;
+    margin: 2px auto;
+}
+
+.country-code {
+    font-size: 8px;
+    margin-top: auto;
+    margin-bottom: 2px;
+}
+
+/* Nummernschild Inhalt */
+.plate-content {
+    display: flex;
+    align-items: center;
+    padding-left: 8px;
+    gap: 8px;
+}
+
+.region {
+    font-weight: bold;
+}
+
+.stickers {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.inspection-sticker,
+.seal-sticker {
+    border-radius: 50%;
+    border: 1px solid black;
+}
+
+.inspection-sticker {
+    width: 10px;
+    height: 10px;
+    background-color: yellow;
+}
+
+.seal-sticker {
+    width: 12px;
+    height: 12px;
+    background-color: red;
+}
+
+.identifier {
+    font-weight: bold;
+}
+
+.numbers {
+    font-weight: bold;
+}
+/* ---------- Nummernschild ENDE ---------- */
+
+
+
+
+/* ---------- Kacheln Index-Page ANFANG ---------- */
+.card-category {
+    color: white;
+    text-shadow: 1px 1px 2px black;
+    background-size: cover;
+    background-position: center;
+    border-radius: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.card-category:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.card-overlay {
+    background: rgba(0, 0, 0, 0.5); /* Halbtransparenter Hintergrund */
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+/* ---------- Kacheln Index-Page ENDE ---------- */
+
+
+/* input:focus, input.focus, select:focus, select.focus, textarea:focus, textarea.focus {
+    box-shadow: 0 0 0 0.2rem var(--dav-blau-shadow)!important;
+} */
+
+
+
+
+
+/* Standardfarbe für die nav-links (default Zustand) */
+.nav-link {
+    color: var(--dav-grau) !important; /* Standardfarbe */
+    border-bottom: none !important; /* Verhindert, dass eine graue Linie erscheint */
+}
+
+/* Farbe beim Hover über die nav-links */
+.nav-link:hover {
+    color: var(--dav-blau) !important;
+    border: 1px solid var(--dav-blau) !important;
+}
+
+/* Farbe für den aktiven Tab */
+.nav-link.active {
+    color: var(--dav-rot) !important; /* Rot für den Text */
+    border-left: 2px solid var(--dav-rot) !important;
+    border-right: 2px solid var(--dav-rot) !important;
+    border-top: 2px solid var(--dav-rot) !important;
+    border-bottom: 2px solid transparent !important; /* Unsichtbare Linie für den aktiven Tab */
+    border-radius-top: 5px;
+}
+
+.nav-tabs {
+    border-bottom: 2px solid var(--dav-rot);
+}
+
+/* Zeige die rote Linie unter dem aktiven Tab */
+.nav-tabs .nav-item .nav-link.active {
+    border-bottom: none !important; /* Linie unter dem aktiven Tab */
+}

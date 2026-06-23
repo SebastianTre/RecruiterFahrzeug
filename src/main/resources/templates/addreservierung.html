@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="https://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: headFragment}"></head>
+<body>
+<div class="content">
+    <div th:replace="~{fragments/header :: navFragment}"></div>
+    <div class="top">
+        <h1>Reservierung hinzufügen</h1>
+    </div>
+
+    <form th:action="@{/reservierung/save}" th:object="${reservierung}" method="post">
+        <table>
+            <!-- Dropdown für Fahrzeug-Auswahl -->
+            <tr>
+                <td><label for="fahrzeug" class="col-auto col-form-label control-label">Fahrzeug <span>*</span></label></td>
+                <td>
+
+                    <select name="fahrzeugId" id="fahrzeug" class="form-control col-md-6 select2" required>
+                        <option value="" disabled selected>Bitte Fahrzeug auswählen</option>
+                        <option value="[iterStat.index]" th:each="fahrzeug, iterStat : ${fahrzeug}"
+                                th:value="${fahrzeug.id}"
+                                th:text="${fahrzeug.unterscheidungszeichen + ' - ' + fahrzeug.erkennungsnummer + ' ' + fahrzeug.ziffern}">
+                        </option>
+                    </select>
+                    <div class="invalid-feedback">Bitte ein gültiges Fahrzeug wählen.</div>
+                </td>
+                <script>
+                    $(document).ready(function() {
+                        $('.select2').select2({
+                            maximumInputLength: 300,
+                            width: '100%'
+                        });
+                    });
+                </script>
+            </tr>
+            <!-- Reservierungsdaten -->
+            <tr>
+                <td><label for="beginn" class="col-auto col-form-label control-label">Beginn *</label></td>
+                <td>
+                    <input type="datetime-local" id="beginn" th:field="*{beginn}" class="form-control" required>
+                    <div class="invalid-feedback">Der Beginn darf nicht in der Vergangenheit liegen.</div>
+                </td>
+            </tr>
+            <tr>
+                <td><label for="ende" class="col-auto col-form-label control-label">Ende *</label></td>
+                <td>
+                    <input type="datetime-local" id="ende" th:field="*{ende}" class="form-control" required>
+                    <div class="invalid-feedback">Das Ende muss vor dem Beginn liegen.</div>
+                </td>
+            </tr>
+            <!-- Mitarbeiter -->
+            <tr>
+                <td><label for="mitarbeiter" class="col-auto col-form-label control-label">Mitarbeiter *</label></td>
+                <td>
+                    <input type="text" id="mitarbeiter" th:field="*{mitarbeiter}" class="form-control" required maxlength="50">
+                    <div class="invalid-feedback">Maximal 50 Zeichen sind erlaubt.</div>
+                    <div th:if="${#fields.hasErrors('mitarbeiter')}" class="text-danger">
+                        <p th:errors="*{mitarbeiter}"></p>
+                    </div>
+                </td>
+            </tr>
+            <!-- Anmerkung -->
+            <tr>
+                <td><label for="anmerkung" class="col-auto col-form-label">Anmerkung</label></td>
+                <td>
+                    <textarea id="anmerkung" th:field="*{anmerkung}" class="form-control" rows="4" maxlength="500"></textarea>
+                    <div th:if="${#fields.hasErrors('anmerkung')}" class="text-danger">
+                        <p th:errors="*{anmerkung}"></p>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        <p>
+            <button type="submit" class="btn btn-dav">Speichern</button>
+            <a href="/reservierung" class="btn btn-dav2">Abbrechen</a>
+        </p>
+    </form>
+
+    <!-- Fehlermeldung -->
+    <div th:if="${errorMessage}" class="alert alert-danger">
+        <p th:text="${errorMessage}"></p>
+    </div>
+
+    <!--TODO: nochmal anschauen wenn Zeit ... besser als oben aber noch nicht komplett-->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            function getLocalDateTime() {
+                const now = new Date();
+                const offset = now.getTimezoneOffset() * 60000; // Offset in ms
+                return new Date(now - offset).toISOString().slice(0, 16);
+            }
+
+            const beginInput = document.getElementById("beginn");
+            const endInput = document.getElementById("ende");
+
+            function updateMinValues() {
+                const now = getLocalDateTime();
+
+                if (!beginInput.value && !endInput.value) {
+                    // Falls noch nichts gewählt wurde, beide auf "now" beschränken
+                    beginInput.setAttribute('min', now);
+                    endInput.setAttribute('min', now);
+                } else if (beginInput.value) {
+                    // Falls ein Beginn gewählt wurde, Ende mindestens 1 Minute später setzen
+                    const beginTime = new Date(beginInput.value);
+                    const minEndTime = new Date(beginTime.getTime() + 60000); // 1 Minute später
+                    endInput.setAttribute('min', minEndTime.toISOString().slice(0, 16));
+                } else if (endInput.value) {
+                    // Falls ein Ende gewählt wurde, Beginn muss zwischen "now" und (end-1min) liegen
+                    const endTime = new Date(endInput.value);
+                    const nowTime = new Date(getLocalDateTime());
+
+                    const minBeginTime = new Date(Math.max(nowTime.getTime(), endTime.getTime() - 60000)); // max(now, end-1min)
+                    beginInput.setAttribute('min', nowTime.toISOString().slice(0, 16));
+                    beginInput.setAttribute('max', minBeginTime.toISOString().slice(0, 16));
+                }
+            }
+
+            beginInput.addEventListener('change', function () {
+                if (!beginInput.value) return;
+
+                const beginTime = new Date(beginInput.value);
+                const minEndTime = new Date(beginTime.getTime() + 60000); // 1 Minute später
+
+                endInput.setAttribute('min', minEndTime.toISOString().slice(0, 16));
+
+                if (endInput.value && new Date(endInput.value) < minEndTime) {
+                    endInput.value = minEndTime.toISOString().slice(0, 16);
+                }
+            });
+
+            endInput.addEventListener('change', function () {
+                if (!endInput.value) return;
+
+                const endTime = new Date(endInput.value);
+                const now = new Date(getLocalDateTime());
+
+                if (!beginInput.value) {
+                    // Falls Beginn noch leer ist, sicherstellen, dass es zwischen now und (end-1min) liegt
+                    const minBeginTime = new Date(Math.max(now.getTime(), endTime.getTime() - 60000));
+                    beginInput.setAttribute('min', now.toISOString().slice(0, 16));
+                    beginInput.setAttribute('max', minBeginTime.toISOString().slice(0, 16));
+                } else {
+                    const beginTime = new Date(beginInput.value);
+                    if (endTime <= beginTime) {
+                        alert("Das Ende muss mindestens 1 Minute nach dem Beginn liegen!");
+                        const newEndTime = new Date(beginTime.getTime() + 60000);
+                        endInput.value = newEndTime.toISOString().slice(0, 16);
+                    }
+                }
+            });
+
+            updateMinValues(); // Initiale Werte setzen
+        });
+    </script>
+
+</div>
+<div th:replace="~{fragments/footer :: footerFragment}"></div>
+</body>
+</html>

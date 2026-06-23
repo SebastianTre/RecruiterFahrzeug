@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="https://www.thymleaf.org">
+    <head th:replace="~{fragments/header :: headFragment}"></head>
+    <body>
+        <div class="content">
+            <div th:replace="~{fragments/header :: navFragment}"></div>
+            <div class="top">
+                <h2 class="mb-5">Es ist ein Fehler aufgetreten!</h2>
+
+                <p th:text="${errorMessage}"></p>
+                <p th:text="${errorCode}"></p>
+
+                <!--    TODO: Kommentar bzw. Stacktrace entfernen-->
+                <div th:if="${stackTrace}">
+                    <h3>Stacktrace:</h3>
+                    <pre th:text="${stackTrace}"></pre>
+                </div>
+            </div>
+        </div>
+        <div th:replace="~{fragments/footer :: footerFragment}"></div>
+    </body>
+</html>

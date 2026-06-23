@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: headFragment}"></head>
+<body>
+    <div class="content">
+        <div th:replace="~{fragments/header :: navFragment}"></div>
+        <div class="top">
+            <h1>Reservierungenliste</h1>
+            <p>Anzahl der Reservierungen: <span th:text="${#lists.size(reservierungenPresent)} + ${#lists.size(reservierungenPast)}"></span></p>
+            <p><a th:href="@{/reservierung/add}" class="btn btn-dav">Reservierung hinzufügen</a></p>
+        </div>
+
+
+        <div class="container-fluid">
+            <br>
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" data-toggle="tab" href="#reservierungenPresent">
+                        <span th:text="${#lists.size(reservierungenPresent)}"></span> Laufende & Zukünftige</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#reservierungenPast">
+                        <span th:text="${#lists.size(reservierungenPast)}"></span> Vergangene</a>
+                </li>
+            </ul>
+
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <!-- ---------- Inhalt Liste Laufende & Zukünftige Reservierungen ANFANG ---------- -->
+                <div id="reservierungenPresent" class="container-fluid tab-pane active p-0"><br>
+                    <h3>laufende & zukünftige Reservierungen</h3>
+                    <table class="table table-striped" id="reservierungTablePresent">
+                        <thead class="thead-light">
+                        <tr>
+                            <th scope="col" class="sortable" data-column="fahrzeug" title="Klicken, um nach Fahrzeugen zu sortieren">Kennzeichen <span></span></th>
+                            <th scope="col" class="sortable" data-column="beginn" title="Klicken, um nach Beginn zu sortieren">Beginn <span>▲</span></th>
+                            <th scope="col" class="sortable" data-column="ende" title="Klicken, um nach Ende zu sortieren">Ende <span></span></th>
+                            <th scope="col" class="sortable" data-column="mitarbeiter" title="Klicken, um nach Mitarbeiter zu sortieren">Mitarb. <span></span></th>
+                            <th scope="col">Anmerkung</th>
+                            <th scope="col">Aktion</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(reservierungenPresent)}">
+                            <td colspan="6" class="text-center">Es sind keine Reservierungen geplant.</td>
+                        </tr>
+                        <tr th:each="reservierung : ${reservierungenPresent}">
+                            <td>
+                                <div class="license-plate d-flex align-items-center" th:if="${fahrzeugePresent[reservierung.id] != null}">
+                                    <div class="blue-band d-flex flex-column justify-content-center">
+                                        <div class="eu-flag"></div>
+                                        <div class="country-code">D</div>
+                                    </div>
+                                    <div class="plate-content">
+                                        <span class="region" th:text="${fahrzeugePresent[reservierung.id].unterscheidungszeichen}"></span>
+                                        <div class="stickers">
+                                            <div class="inspection-sticker"></div>
+                                            <div class="seal-sticker"></div>
+                                        </div>
+                                        <span class="identifier">
+                                          <span th:text="${fahrzeugePresent[reservierung.id].erkennungsnummer}"></span>
+                                          <span th:text="' ' + ${fahrzeugePresent[reservierung.id].ziffern}"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <p><strong><span th:text="${fahrzeugePresent[reservierung.id].hersteller}"></span>
+                                    <span th:text="${fahrzeugePresent[reservierung.id].modell}"></span></strong></p>
+                                <span th:if="${fahrzeugePresent[reservierung.id] == null}">Fahrzeugdaten nicht verfügbar</span>
+                            </td>
+
+                            <td th:text="${reservierung.beginn != null} ? ${#temporals.format(reservierung.beginn, 'dd.MM.yyyy HH:mm')} : '-'"></td>
+                            <td th:text="${reservierung.ende != null} ? ${#temporals.format(reservierung.ende, 'dd.MM.yyyy HH:mm')} : '-'"></td>
+                            <td th:text="${reservierung.mitarbeiter}">-</td>
+                            <td th:text="${reservierung.anmerkung}">-</td>
+                            <td>
+                                <button class="btn btn-dav1 btn-sm btn-dav-with m-1" data-toggle="modal" data-target="#deleteModal"
+                                        th:data-id="${reservierung.id}"
+                                        th:data-beginn="${reservierung.beginn}"
+                                        th:data-ende="${reservierung.ende}"
+                                        th:data-fahrzeugId="${fahrzeugePresent[reservierung.id]?.id}"
+                                        th:data-unterscheidungszeichen="${fahrzeugePresent[reservierung.id]?.unterscheidungszeichen}"
+                                        th:data-erkennungsnummer="${fahrzeugePresent[reservierung.id]?.erkennungsnummer}"
+                                        th:data-ziffern="${fahrzeugePresent[reservierung.id]?.ziffern}"
+                                        th:data-hersteller="${fahrzeugePresent[reservierung.id]?.hersteller}"
+                                        th:data-modell="${fahrzeugePresent[reservierung.id]?.modell}">
+                                    Löschen
+                                </button>
+                                <a th:href="@{/reservierung/edit/{id}(id=${reservierung.id})}" class="btn btn-dav btn-sm btn-dav-with m-1">Ändern</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <!-- Pagination-Buttons ANFANG-->
+                    <div class="pagination-container text-center mt-3">
+                        <button id="firstPagePresent" class="btn btn-dav2 btn-sm">Erste Seite</button>
+                        <button id="prevPagePresent" class="btn btn-dav2 btn-sm">Zurück</button>
+                        <span id="pageNumbersPresent"></span>
+                        <button id="nextPagePresent" class="btn btn-dav2 btn-sm">Weiter</button>
+                        <button id="lastPagePresent" class="btn btn-dav2 btn-sm">Letzte Seite</button>
+
+                        <!-- Dropdown für Einträge pro Seite -->
+                        <select id="rowsPerPageSelectPresent" class="ml-3 form-control form-control-sm" style="width: auto; display: inline-block;">
+                            <option value="5">5 Einträge</option>
+                            <option value="10" selected>10 Einträge</option>
+                            <option value="15">15 Einträge</option>
+                            <option value="20">20 Einträge</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- ---------- Inhalt Liste Laufende & Zukünftige Reservierungen ENDE ---------- -->
+
+                <!-- ---------- Inhalt Liste Vergangene Reservierungen ANFANG ---------- -->
+                <div id="reservierungenPast" class="container-fluid tab-pane fade p-0"><br>
+                    <h3>vergangene Reservierungen</h3>
+                    <table class="table table-striped" id="reservierungTablePast">
+                        <thead class="thead-light">
+                            <tr>
+                                <th scope="col" class="sortable" data-column="fahrzeug" title="Klicken, um nach Fahrzeugen zu sortieren">Kennzeichen <span></span></th>
+                                <th scope="col" class="sortable" data-column="beginn" title="Klicken, um nach Beginn zu sortieren">Beginn <span>▼</span></th>
+                                <th scope="col" class="sortable" data-column="ende" title="Klicken, um nach Ende zu sortieren">Ende <span></span></th>
+                                <th scope="col" class="sortable" data-column="mitarbeiter" title="Klicken, um nach Mitarbeiter zu sortieren">Mitarb. <span></span></th>
+                                <th scope="col" data-column="anmerkung">Anmerkung</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(reservierungenPast)}">
+                                <td colspan="5" class="text-center">Es gibt keine vergangenen Reservierungen.</td>
+                            </tr>
+                            <tr th:each="reservierung : ${reservierungenPast}">
+                                <td>
+                                    <div class="license-plate d-flex align-items-center" th:if="${fahrzeugePast[reservierung.id] != null}">
+                                        <div class="blue-band d-flex flex-column justify-content-center">
+                                            <div class="eu-flag"></div>
+                                            <div class="country-code">D</div>
+                                        </div>
+                                        <div class="plate-content">
+                                            <span class="region" th:text="${fahrzeugePast[reservierung.id].unterscheidungszeichen}"></span>
+                                            <div class="stickers">
+                                                <div class="inspection-sticker"></div>
+                                                <div class="seal-sticker"></div>
+                                            </div>
+                                            <span class="identifier">
+                                                  <span th:text="${fahrzeugePast[reservierung.id].erkennungsnummer}"></span>
+                                                  <span th:text="' ' + ${fahrzeugePast[reservierung.id].ziffern}"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p><strong><span th:text="${fahrzeugePast[reservierung.id].hersteller}"></span>
+                                        <span th:text="${fahrzeugePast[reservierung.id].modell}"></span></strong></p>
+                                    <span th:if="${fahrzeugePast[reservierung.id] == null}">Fahrzeugdaten nicht verfügbar</span>
+                                </td>
+
+                                <td th:text="${reservierung.beginn != null} ? ${#temporals.format(reservierung.beginn, 'dd.MM.yyyy HH:mm')} : '-'"></td>
+                                <td th:text="${reservierung.ende != null} ? ${#temporals.format(reservierung.ende, 'dd.MM.yyyy HH:mm')} : '-'"></td>
+                                <td th:text="${reservierung.mitarbeiter}">-</td>
+                                <td th:text="${reservierung.anmerkung}">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <!-- Pagination-Buttons ANFANG-->
+                    <div class="pagination-container text-center mt-3">
+                        <button id="firstPagePast" class="btn btn-dav2 btn-sm">Erste Seite</button>
+                        <button id="prevPagePast" class="btn btn-dav2 btn-sm">Zurück</button>
+                        <span id="pageNumbersPast"></span>
+                        <button id="nextPagePast" class="btn btn-dav2 btn-sm">Weiter</button>
+                        <button id="lastPagePast" class="btn btn-dav2 btn-sm">Letzte Seite</button>
+
+                        <!-- Dropdown für Einträge pro Seite -->
+                        <select id="rowsPerPageSelectPast" class="ml-3 form-control form-control-sm" style="width: auto; display: inline-block;">
+                            <option value="5">5 Einträge</option>
+                            <option value="10" selected>10 Einträge</option>
+                            <option value="15">15 Einträge</option>
+                            <option value="20">20 Einträge</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- ---------- Inhalt Liste Vergangene Reservierungen ANFANG ---------- -->
+            </div>
+        </div>
+
+
+
+        <!-- Modal für Erfolgsnachricht ANFANG-->
+        <div th:if="${successMessage}" class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="successModalLabel">Erfolg</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p th:text="${successMessage}"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-dav2" data-dismiss="modal">Schließen</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal für Erfolgsnachricht ENDE -->
+
+        <!-- Modal für Delete Confirmation ANFANG -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteModalLabel">Reservierung löschen</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Möchten Sie die Reservierung für das Fahrzeug
+                            </br><strong><span id="kennzeichen"></span> (<span id="hersteller"></span> <span id="modell"></span>)</strong>
+                            </br>wirklich löschen?</p>
+                        <p>Reservierung: <strong><span id="reservierungBeginn"></span></strong> bis <strong><span id="reservierungEnde"></span></strong></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-dav2" data-dismiss="modal">Abbrechen</button>
+                        <a id="confirmDeleteButton" href="#" class="btn btn-dav1">Löschen</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal für Delete Confirmation ENDE -->
+
+    </div>
+    <div th:replace="~{fragments/footer :: footerFragment}"></div>
+
+    <script th:inline="javascript">
+        // das Modal öffnen, wenn eine Erfolgsmeldung vorhanden ist
+        if ([[${successMessage}]] != '') {
+            $('#successModal').modal('show');
+        }
+    </script>
+
+    <script>
+        // Funktion zum Formatieren von Datum
+        function formatDate(date) {
+            var d = new Date(date);
+            var day = ('0' + d.getDate()).slice(-2);
+            var month = ('0' + (d.getMonth() + 1)).slice(-2); // Monate sind nullbasiert
+            var year = d.getFullYear();
+            var hours = ('0' + d.getHours()).slice(-2);
+            var minutes = ('0' + d.getMinutes()).slice(-2);
+            return day + '.' + month + '.' + year + ' ' + hours + ':' + minutes;
+        }
+
+        // Modal wird mit den Fahrzeugdaten gefüllt, wenn der Löschen-Button angeklickt wird
+        $('#deleteModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Button, der das Modal ausgelöst hat
+            var reservierungId = button.data('id');
+            var fahrzeugId = button.data('fahrzeugid');
+            var unterscheidungszeichen = button.data('unterscheidungszeichen');
+            var erkennung = button.data('erkennungsnummer');
+            var ziffern = button.data('ziffern');
+            var hersteller = button.data('hersteller');
+            var modell = button.data('modell');
+            var beginn = button.data('beginn');
+            var ende = button.data('ende');
+
+            // das Kennzeichen im Modal mit Trennzeichen setzen
+            var kennzeichenFormatted = unterscheidungszeichen + " - " + erkennung + " " + ziffern;
+
+            // Datum formatieren
+            var beginnFormatted = formatDate(beginn);
+            var endeFormatted = formatDate(ende);
+
+            // die Werte in die Modal-Elemente setzen
+            var modal = $(this);
+            modal.find('#kennzeichen').text(kennzeichenFormatted);
+            modal.find('#hersteller').text(hersteller);
+            modal.find('#modell').text(modell);
+            modal.find('#reservierungBeginn').text(beginnFormatted);
+            modal.find('#reservierungEnde').text(endeFormatted);
+
+            // den Löschen-Button anpassen, damit er die richtige URL enthält
+            modal.find('#confirmDeleteButton').attr('href', '/reservierung/delete/' + reservierungId);
+        });
+    </script>
+
+    <script>
+        <!-- ---------- Sortierung und Pagination ANFANG---------- -->
+        document.addEventListener("DOMContentLoaded", function () {
+        <!--  ---------- aktuelle Reservierungen ANFANG ---------- -->
+            let rowsPerPagePresent = 10;
+            let tableRowsPresent = Array.from(document.querySelectorAll("#reservierungTablePresent tbody tr:not([th\\:if])"));
+            let totalEntriesPresent = tableRowsPresent.length;
+            let totalPagesPresent = Math.ceil(totalEntriesPresent / rowsPerPagePresent);
+            let currentPagePresent = 1;
+            let currentSortPresent = { column: '', direction: '' };
+
+            const firstButtonPresent = document.getElementById("firstPagePresent");
+            const prevButtonPresent = document.getElementById("prevPagePresent");
+            const nextButtonPresent = document.getElementById("nextPagePresent");
+            const lastButtonPresent = document.getElementById("lastPagePresent");
+            const pageNumbersContainerPresent = document.getElementById("pageNumbersPresent");
+            const rowsPerPageSelectPresent = document.getElementById("rowsPerPageSelectPresent");
+            const tableHeadersPresent = document.querySelectorAll("#reservierungTablePresent .sortable");
+
+            function updateTableRowsPresent() {
+                tableRowsPresent = Array.from(document.querySelectorAll("#reservierungTablePresent tbody tr:not([th\\:if])"));
+                totalEntriesPresent = tableRowsPresent.length;
+                totalPagesPresent = Math.ceil(totalEntriesPresent / rowsPerPagePresent);
+            }
+
+            function displayPagePresent(page) {
+                const start = (page - 1) * rowsPerPagePresent;
+                const end = start + rowsPerPagePresent;
+
+                tableRowsPresent.forEach((row, index) => {
+                    row.style.display = (index >= start && index < end) ? "" : "none";
+                });
+
+                currentPagePresent = page;
+                updatePaginationButtonsPresent();
+            }
+
+            function updatePaginationButtonsPresent() {
+                pageNumbersContainerPresent.innerHTML = "";
+
+                for (let i = 1; i <= totalPagesPresent; i++) {
+                    const pageButton = document.createElement("span");
+                    pageButton.textContent = i;
+                    pageButton.classList.add("page-number");
+                    if (i === currentPagePresent) pageButton.classList.add("active");
+
+                    pageButton.addEventListener("click", () => displayPagePresent(i));
+                    pageNumbersContainerPresent.appendChild(pageButton);
+                }
+
+                // Buttons aktivieren/deaktivieren
+                firstButtonPresent.disabled = currentPagePresent === 1 || totalPagesPresent <= 1;
+                prevButtonPresent.disabled = currentPagePresent === 1 || totalPagesPresent <= 1;
+                nextButtonPresent.disabled = currentPagePresent === totalPagesPresent || totalPagesPresent <= 1;
+                lastButtonPresent.disabled = currentPagePresent === totalPagesPresent || totalPagesPresent <= 1;
+            }
+
+            function sortTablePresent(column, direction) {
+                const getCellValue = (row, column) => {
+                    if (column === 'kennzeichen') {
+                        return row.querySelector('.plate-content').innerText.trim();
+                    }
+                    const index = getColumnIndexPresent(column);
+                    return row.querySelector(`td:nth-child(${index})`).innerText.trim().toLowerCase();
+                };
+
+                tableRowsPresent.sort((a, b) => {
+                    const valA = getCellValue(a, column);
+                    const valB = getCellValue(b, column);
+                    if (valA < valB) return direction === 'asc' ? -1 : 1;
+                    if (valA > valB) return direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+
+                const tbody = document.querySelector("#reservierungTablePresent tbody");
+                tbody.innerHTML = ""; // Leeren und neu füllen
+                tableRowsPresent.forEach(row => tbody.appendChild(row));
+
+                // Nach Sortierung die erste Seite anzeigen
+                displayPagePresent(1);
+            }
+
+            function getColumnIndexPresent(column) {
+                switch (column) {
+                    case 'beginn': return 2;
+                    case 'ende': return 3;
+                    case 'mitarbeiter': return 4;
+                    default: return 1; // Kennzeichen
+                }
+            }
+
+            function updateSortIconsPresent(activeHeader, direction) {
+                tableHeadersPresent.forEach(header => {
+                    const icon = header.querySelector('span');
+                    icon.innerHTML = ''; // Reset icons
+                });
+                const icon = activeHeader.querySelector('span');
+                icon.innerHTML = direction === 'asc' ? '▼' : '▲';
+            }
+
+            // Event-Listener für Sortierung
+            tableHeadersPresent.forEach(header => {
+                header.addEventListener('click', () => {
+                    const column = header.getAttribute('data-column');
+                    let direction = 'asc';
+                    if (currentSortPresent.column === column && currentSortPresent.direction === 'asc') {
+                        direction = 'desc';
+                    }
+
+                    sortTablePresent(column, direction);
+                    updateSortIconsPresent(header, direction);
+                    currentSortPresent = { column, direction };
+                });
+            });
+
+            // Dropdown-Änderung für Einträge pro Seite
+            rowsPerPageSelectPresent.addEventListener("change", function () {
+                rowsPerPagePresent = parseInt(this.value);
+                totalPagesPresent = Math.ceil(totalEntriesPresent / rowsPerPagePresent);
+                displayPagePresent(1);
+            });
+
+            // Event-Listener für Pagination Buttons
+            firstButtonPresent.addEventListener("click", () => displayPagePresent(1));
+            prevButtonPresent.addEventListener("click", () => { if (currentPagePresent > 1) displayPagePresent(currentPagePresent - 1); });
+            nextButtonPresent.addEventListener("click", () => { if (currentPagePresent < totalPagesPresent) displayPagePresent(currentPagePresent + 1); });
+            lastButtonPresent.addEventListener("click", () => displayPagePresent(totalPagesPresent));
+
+            // Prüfen, ob eine Erfolgsmeldung nach dem Hinzufügen vorliegt (Seite zur letzten Seite springen)
+            if ([[${successMessage != null}]] && totalPagesPresent > 1) {
+                displayPagePresent(totalPagesPresent);
+            } else {
+                displayPagePresent(1);  // Standardmäßig erste Seite anzeigen
+            }
+            <!--  ---------- aktuelle Reservierungen ENDE ---------- -->
+
+            <!--  ---------- vergangene Reservierungen ANFANG ---------- -->
+            // Die gleiche Logik für vergangene Reservierungen
+            let rowsPerPagePast = 10;
+            let tableRowsPast = Array.from(document.querySelectorAll("#reservierungTablePast tbody tr:not([th\\:if])"));
+            let totalEntriesPast = tableRowsPast.length;
+            let totalPagesPast = Math.ceil(totalEntriesPast / rowsPerPagePast);
+            let currentPagePast = 1;
+            let currentSortPast = { column: '', direction: '' };
+
+            const firstButtonPast = document.getElementById("firstPagePast");
+            const prevButtonPast = document.getElementById("prevPagePast");
+            const nextButtonPast = document.getElementById("nextPagePast");
+            const lastButtonPast = document.getElementById("lastPagePast");
+            const pageNumbersContainerPast = document.getElementById("pageNumbersPast");
+            const rowsPerPageSelectPast = document.getElementById("rowsPerPageSelectPast");
+            const tableHeadersPast = document.querySelectorAll("#reservierungTablePast .sortable");
+
+            function updateTableRowsPast() {
+                tableRowsPast = Array.from(document.querySelectorAll("#reservierungTablePast tbody tr:not([th\\:if])"));
+                totalEntriesPast = tableRowsPast.length;
+                totalPagesPast = Math.ceil(totalEntriesPast / rowsPerPagePast);
+            }
+
+            function displayPagePast(page) {
+                const start = (page - 1) * rowsPerPagePast;
+                const end = start + rowsPerPagePast;
+
+                tableRowsPast.forEach((row, index) => {
+                    row.style.display = (index >= start && index < end) ? "" : "none";
+                });
+
+                currentPagePast = page;
+                updatePaginationButtonsPast();
+            }
+
+            function updatePaginationButtonsPast() {
+                pageNumbersContainerPast.innerHTML = "";
+
+                for (let i = 1; i <= totalPagesPast; i++) {
+                    const pageButton = document.createElement("span");
+                    pageButton.textContent = i;
+                    pageButton.classList.add("page-number");
+                    if (i === currentPagePast) pageButton.classList.add("active");
+
+                    pageButton.addEventListener("click", () => displayPagePast(i));
+                    pageNumbersContainerPast.appendChild(pageButton);
+                }
+
+                // Buttons aktivieren/deaktivieren
+                firstButtonPast.disabled = currentPagePast === 1 || totalPagesPast <= 1;
+                prevButtonPast.disabled = currentPagePast === 1 || totalPagesPast <= 1;
+                nextButtonPast.disabled = currentPagePast === totalPagesPast || totalPagesPast <= 1;
+                lastButtonPast.disabled = currentPagePast === totalPagesPast || totalPagesPast <= 1;
+            }
+
+            function sortTablePast(column, direction) {
+                const getCellValue = (row, column) => {
+                    if (column === 'kennzeichen') {
+                       return row.querySelector('.plate-content').innerText.trim();
+                    }
+                    const index = getColumnIndexPast(column);
+                    return row.querySelector(`td:nth-child(${index})`).innerText.trim().toLowerCase();
+                };
+
+                tableRowsPast.sort((a, b) => {
+                    const valA = getCellValue(a, column);
+                    const valB = getCellValue(b, column);
+                    if (valA < valB) return direction === 'asc' ? -1 : 1;
+                    if (valA > valB) return direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+
+                const tbody = document.querySelector("#reservierungTablePast tbody");
+                tbody.innerHTML = ""; // Leeren und neu füllen
+                tableRowsPast.forEach(row => tbody.appendChild(row));
+
+                // Nach Sortierung die erste Seite anzeigen
+                displayPagePast(1);
+            }
+
+            function getColumnIndexPast(column) {
+                switch (column) {
+                    case 'beginn': return 2;
+                    case 'ende': return 3;
+                    case 'mitarbeiter': return 4;
+                    default: return 1; // Kennzeichen
+                }
+            }
+
+            function updateSortIconsPast(activeHeader, direction) {
+                tableHeadersPast.forEach(header => {
+                    const icon = header.querySelector('span');
+                    icon.innerHTML = ''; // Reset icons
+                });
+                const icon = activeHeader.querySelector('span');
+                icon.innerHTML = direction === 'asc' ? '▼' : '▲';
+            }
+
+            // Event-Listener für Sortierung
+            tableHeadersPast.forEach(header => {
+                header.addEventListener('click', () => {
+                    const column = header.getAttribute('data-column');
+                    let direction = 'asc';
+                    if (currentSortPast.column === column && currentSortPast.direction === 'asc') {
+                        direction = 'desc';
+                    }
+
+                    sortTablePast(column, direction);
+                    updateSortIconsPast(header, direction);
+                    currentSortPast = { column, direction };
+                });
+            });
+
+            // Dropdown-Änderung für Einträge pro Seite
+            rowsPerPageSelectPast.addEventListener("change", function () {
+                rowsPerPagePast = parseInt(this.value);
+                totalPagesPast = Math.ceil(totalEntriesPast / rowsPerPagePast);
+                displayPagePast(1);
+            });
+
+            // Event-Listener für Pagination Buttons
+            firstButtonPast.addEventListener("click", () => displayPagePast(1));
+            prevButtonPast.addEventListener("click", () => { if (currentPagePast > 1) displayPagePast(currentPagePast - 1); });
+            nextButtonPast.addEventListener("click", () => { if (currentPagePast < totalPagesPast) displayPagePast(currentPagePast + 1); });
+            lastButtonPast.addEventListener("click", () => displayPagePast(totalPagesPast));
+
+            // Prüfen, ob eine Erfolgsmeldung nach dem Hinzufügen vorliegt (Seite zur letzten Seite springen)
+            if ([[${successMessage != null}]] && totalPagesPast > 1) {
+                displayPagePast(totalPagesPast);
+            } else {
+                displayPagePast(1);  // Standardmäßig erste Seite anzeigen
+            }
+            <!--  ---------- vergangene Reservierungen ENDE ---------- -->
+        });
+        <!-- ---------- Sortierung und Pagination ENDE---------- -->
+    </script>
+</body>
+</html>

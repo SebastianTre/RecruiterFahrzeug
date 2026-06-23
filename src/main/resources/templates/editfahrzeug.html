@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: headFragment}"></head>
+<body>
+<div class="content">
+    <div th:replace="~{fragments/header :: navFragment}"></div>
+    <style th:replace="~{fragments/header :: fahrzeugCSS}"></style>
+    <div class="top">
+        <h1>Fahrzeug bearbeiten</h1>
+    </div>
+    <form id="fahrzeugForm" action="#" th:action="@{/fahrzeug/update}" th:object="${fahrzeug}" method="post">
+        <input type="hidden" th:field="*{id}"/>
+        <input type="hidden" th:field="*{aktiv}"/>
+        <table>
+            <tr>
+                <td><label for="unterscheidungszeichen" class="col-auto col-form-label control-label">Unterscheidungszeichen <span>*</span></label></td>
+                <td>
+                    <input type="text" id="unterscheidungszeichen" th:field="*{unterscheidungszeichen}" class="form-control"
+                           placeholder="Unterscheidungszeichen" required maxlength="3">
+                    <div id="invalidU" class="invalid-feedback">Das Unterscheidungszeichen muss aus 1 - 3 Großbuchstaben (A-Z, Ä, Ö, Ü, ß) bestehen.</div>
+                </td>
+            </tr>
+            <tr>
+                <td><label for="erkennungsnummer" class="col-auto col-form-label">Erkennungsnummer <span>*</span></label></td>
+                <td>
+                    <input type="text" id="erkennungsnummer" th:field="*{erkennungsnummer}" class="form-control" placeholder="Erkennungsnummer" required maxlength="2">
+                    <div id="invalidE" class="invalid-feedback">Die Erkennungsnummer muss aus 1 - 2 Großbuchstaben (A-Z) bestehen.</div>
+                </td>
+            </tr>
+            <tr>
+                <td><label for="ziffern" class="col-auto col-form-label">Ziffern <span class=sub>*</span></label></td>
+                <td>
+                    <input type="text" id="ziffern" th:field="*{ziffern}" class="form-control" placeholder="Ziffern" required maxlength="4">
+                    <div id="invalidZ" class="invalid-feedback">Die Ziffern müssen mit einer Zahl (1-9) beginnen und dürfen höchstens einen Großbuchstaben am Ende enthalten, max. 4 Zeichen.</div>
+                </td>
+            </tr>
+            <tr>
+                <td><label for="hersteller" class="col-auto col-form-label control-label">Hersteller <span class=sub>*</span></label></td>
+                <td>
+                    <input type="text" id="hersteller" th:field="*{hersteller}" class="form-control"
+                           aria-describedby="herstellerHelp" placeholder="Hersteller" required maxlength="20">
+                    <div class="invalid-feedback">Maximal 20 Zeichen (a-z, A-Z, ß, 0-9, -, ., (, ), &, +, /) sind erlaubt.</div>
+                </td>
+            </tr>
+            <tr>
+                <td><label class="col-auto col-form-label">Modell <span class=sub>*</span></label></td>
+                <td>
+                    <input type="text" id="modell" th:field="*{modell}" class="form-control"  placeholder="Modell" required>
+                    <div class="invalid-feedback">Maximal 50 Zeichen (a-z, A-Z, ß, 0-9, -, ., (, ), &, +, /) sind erlaubt.</div>
+                </td>
+            </tr>
+        </table>
+        <p class="ml-3">
+            <button type="submit" name="action" value="save" class="btn btn-dav">Speichern</button>&nbsp;&nbsp;
+            <a href="/fahrzeug" class="btn btn-dav2">Abbrechen</a>
+        </p>
+    </form>
+    <div id="errorContainer" class="alert alert-danger" style="display:none;">
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger">
+        <p th:text="${errorMessage}"></p>
+    </div>
+</div>
+<div th:replace="~{fragments/footer :: footerFragment}"></div>
+<script>
+    const areValidated = {
+        checkU: false,
+        checkE: false,
+        checkZ: false
+    };
+
+    // Eventlistener für den Submit-Button
+    document.getElementById("fahrzeugForm").addEventListener("submit", function(event) {
+        const element = {
+            unter: document.getElementById("unterscheidungszeichen"),
+            erkenn: document.getElementById("erkennungsnummer"),
+            ziff: document.getElementById("ziffern"),
+            modell: document.getElementById("modell"),
+            hersteller: document.getElementById("hersteller"),
+            invalidU: document.getElementById("invalidU")
+        };
+        const input = {
+            unter: document.getElementById("unterscheidungszeichen").value.trim(),
+            erkenn: document.getElementById("erkennungsnummer").value.trim(),
+            ziff: document.getElementById("ziffern").value.trim(),
+            modell: document.getElementById("modell").value.trim(),
+            hersteller: document.getElementById("hersteller").value.trim()
+        };
+        const regex = {
+            unter: new RegExp("^[A-ZÄÖÜß]{1,3}$"),
+            erkenn: new RegExp("^[A-Z]{1,2}$"),
+            ziff: new RegExp("^[1-9][0-9]{0,3}[EH]?$"),
+            fahrzeug: new RegExp("^[A-Za-z0-9äöüÄÖÜß\\s\\-\\.\\,\\(\\)&+\\/]{1,20}$")
+        };
+        let errors = 0;
+
+
+        // Unterscheidungszeichen prüfen
+        if (!regex.unter.test(input.unter)) {
+            element.unter.classList.add("is-invalid");
+            element.unter.classList.remove("is-valid");
+            errors++;
+            //document.getElementById("bla").innerHTML = "Das Formular U enthällt " + errors + " Fehler!";
+        } else {
+            element.unter.classList.add("is-valid");
+            element.unter.classList.remove("is-invalid");
+        }
+
+        // Erkennungsnummer prüfen
+        if (!regex.erkenn.test(input.erkenn)) {
+            element.erkenn.classList.add("is-invalid");
+            element.erkenn.classList.remove("is-valid");
+            errors++;
+            //document.getElementById("bla1").innerHTML = "Das Formular E enthällt " + errors + " Fehler!";
+        }
+        else {
+            element.erkenn.classList.add("is-valid");
+            element.erkenn.classList.remove("is-invalid");
+        }
+
+        // Ziffern prüfen
+        if (!regex.ziff.test(input.ziff)) {
+            element.ziff.classList.add("is-invalid");
+            element.ziff.classList.remove("is-valid");
+            errors++;
+            //document.getElementById("bla2").innerHTML = "Das Formular Z enthällt " + errors + " Fehler!";
+        } else {
+            element.ziff.classList.add("is-valid");
+            element.ziff.classList.remove("is-invalid");
+        }
+
+        if (input.ziff.length < 1 || input.ziff.length > 4) {
+            element.ziff.classList.add("is-invalid");
+            element.ziff.classList.remove("is-valid");
+            errors++; // Fehlerzähler erhöhen
+        }
+
+        // Kennzeichenlänge prüfen falls es bis hierhin keine Fehler gab
+        if (errors == 0) {
+            if (input.unter.length + input.erkenn.length + input.ziff.length > 8) {
+                element.unter.classList.add("is-invalid");
+                element.erkenn.classList.add("is-invalid");
+                element.ziff.classList.add("is-invalid");
+                element.unter.classList.remove("is-valid");
+                element.erkenn.classList.remove("is-valid");
+                element.ziff.classList.remove("is-valid");
+                document.getElementById("errorContainer").innerHTML = "Das Kennzeichen darf aus maximal 8 Zeichen bestehen.";
+                document.getElementById("errorContainer").style.display = "block";
+
+                errors++;
+            } else {
+                element.unter.classList.add("is-valid");
+                element.erkenn.classList.add("is-valid");
+                element.ziff.classList.add("is-valid");
+                element.unter.classList.remove("is-invalid");
+                element.erkenn.classList.remove("is-invalid");
+                element.ziff.classList.remove("is-invalid");
+            }
+        }
+
+        // Modell prüfen
+        if (!regex.fahrzeug.test(input.modell)) {
+            element.modell.classList.add("is-invalid");
+            element.modell.classList.remove("is-valid");
+            errors++;
+        } else {
+            element.modell.classList.add("is-valid");
+            element.modell.classList.remove("is-invalid");
+        }
+
+        // Hersteller prüfen
+        if (!regex.fahrzeug.test(input.hersteller)) {
+            element.hersteller.classList.add("is-invalid");
+            element.hersteller.classList.remove("is-valid");
+            errors++;
+        } else {
+            element.hersteller.classList.add("is-valid");
+            element.hersteller.classList.remove("is-invalid");
+        }
+
+        if (!(errors === 0)) {
+            event.preventDefault();
+            document.getElementById("errorContainer").innerHTML = "Das Formular enthällt " + errors + " Fehler!";
+            document.getElementById("errorContainer").style.display = "block";
+        }
+    });
+
+
+    // EventListener für jedes Eingabefeld beim Eingeben validieren --------------- ANFANG
+    document.getElementById("unterscheidungszeichen").addEventListener("input", function() {
+        const unterElement = this;
+        // Nur Buchstaben in Großbuchstaben umwandeln, ohne dass ß u. ä. verändert wird
+        unterElement.value = unterElement.value.replace(/[a-zäöü]/g, function(match) {
+            return match.toUpperCase();
+        });
+        const regex = new RegExp("^[A-ZÄÖÜß]{1,3}$");
+        if (!regex.test(unterElement.value.trim())) {
+            unterElement.classList.add("is-invalid");
+            unterElement.classList.remove("is-valid");
+            areValidated.checkU = false;
+        } else {
+            unterElement.classList.add("is-valid");
+            unterElement.classList.remove("is-invalid");
+            areValidated.checkU = true;
+
+            if (areValidated.checkE == true && areValidated.checkZ == true) {
+                checkLength();
+            }
+        }
+    });
+
+    document.getElementById("erkennungsnummer").addEventListener("input", function() {
+        const erkennElement = this;
+        // Nur Buchstaben in Großbuchstaben umwandeln, ohne dass ß u. ä. verändert wird
+        erkennElement.value = erkennElement.value.replace(/[a-zäöü]/g, function(match) {
+            return match.toUpperCase();
+        });
+        const regex = new RegExp("^[A-Z]{1,2}$");
+        if (!regex.test(erkennElement.value.trim())) {
+            erkennElement.classList.add("is-invalid");
+            erkennElement.classList.remove("is-valid");
+            areValidated.checkE = false;
+        } else {
+            erkennElement.classList.add("is-valid");
+            erkennElement.classList.remove("is-invalid");
+            areValidated.checkE = true;
+
+            if (areValidated.checkU == true && areValidated.checkZ == true) {
+                checkLength();
+            }
+        }
+    });
+
+    document.getElementById("ziffern").addEventListener("input", function() {
+        const ziffElement = this;
+        ziffElement.value = ziffElement.value.trim();
+        ziffElement.value = ziffElement.value.replace(/[a-zäöü]/g, function(match) {
+            return match.toUpperCase();
+        });
+<!--        const length = input.ziff.length();-->
+
+        const regex = new RegExp("^[1-9][0-9]{0,3}[EH]?$");
+        if (!regex.test(ziffElement.value.trim())) {
+            ziffElement.classList.add("is-invalid");
+            ziffElement.classList.remove("is-valid");
+        } else if (ziffElement.value.length < 1 || ziffElement.value.length > 4) {
+            ziffElement.classList.add("is-invalid");
+            ziffElement.classList.remove("is-valid");
+            areValidated.checkZ = false;
+        } else {
+            ziffElement.classList.add("is-valid");
+            ziffElement.classList.remove("is-invalid");
+            areValidated.checkZ = true;
+
+            if (areValidated.checkU == true && areValidated.checkE == true) {
+                checkLength();
+            }
+        }
+    });
+
+    document.getElementById("modell").addEventListener("input", function() {
+        const modellElement = this;
+        const regex = new RegExp("^[A-Za-z0-9äöüÄÖÜß\\s\\-\\.\\,\\(\\)&+\\/]{1,20}$");
+        if (!regex.test(modellElement.value.trim())) {
+            modellElement.classList.add("is-invalid");
+            modellElement.classList.remove("is-valid");
+        } else {
+            modellElement.classList.add("is-valid");
+            modellElement.classList.remove("is-invalid");
+        }
+    });
+
+    document.getElementById("hersteller").addEventListener("input", function() {
+        const herstellerElement = this;
+        const regex = new RegExp("^[A-Za-z0-9äöüÄÖÜß\\s\\-\\.\\,\\(\\)&+\\/]{1,20}$");
+        if (!regex.test(herstellerElement.value.trim())) {
+            herstellerElement.classList.add("is-invalid");
+            herstellerElement.classList.remove("is-valid");
+        } else {
+            herstellerElement.classList.add("is-valid");
+            herstellerElement.classList.remove("is-invalid");
+        }
+    });
+    // EventListener für jedes Eingabefeld beim Eingeben validieren --------------- ENDE
+
+
+    // prüft, ob die Gesamtlänge der Felder mehr als 8 Zeichen beträgt
+    function checkLength() {
+        const unterValue = document.getElementById("unterscheidungszeichen").value.trim();
+        const erkennValue = document.getElementById("erkennungsnummer").value.trim();
+        const ziffValue = document.getElementById("ziffern").value.trim();
+
+        const totalLength = unterValue.length + erkennValue.length + ziffValue.length;
+
+        if (totalLength > 8) {
+            // Zeige Fehler und setze Felder auf ungültig
+            document.getElementById("errorContainer").innerHTML = "Das Kennzeichen darf aus maximal 8 Zeichen bestehen.";
+            document.getElementById("errorContainer").style.display = "block";
+
+            document.getElementById("unterscheidungszeichen").classList.add("is-invalid");
+            document.getElementById("erkennungsnummer").classList.add("is-invalid");
+            document.getElementById("ziffern").classList.add("is-invalid");
+            document.getElementById("unterscheidungszeichen").classList.remove("is-valid");
+            document.getElementById("erkennungsnummer").classList.remove("is-valid");
+            document.getElementById("ziffern").classList.remove("is-valid");
+        } else {
+            // Entferne Fehler und setze Felder auf gültig
+            document.getElementById("errorContainer").style.display = "none";
+            document.getElementById("unterscheidungszeichen").classList.remove("is-invalid");
+            document.getElementById("erkennungsnummer").classList.remove("is-invalid");
+            document.getElementById("ziffern").classList.remove("is-invalid");
+            document.getElementById("unterscheidungszeichen").classList.add("is-valid");
+            document.getElementById("erkennungsnummer").classList.add("is-valid");
+            document.getElementById("ziffern").classList.add("is-valid");
+        }
+    }
+</script>
+</body>
+</html>
