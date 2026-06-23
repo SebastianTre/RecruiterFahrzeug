@@ -32,6 +32,10 @@ Es sollte eine webbasierte Fahrzeugverwaltungssoftware entwickelt werden mit der
 - **Datenbank:** PostgreSQL
 - **Weitere Werkzeuge:** Docker, Git
 
+![Screenshot.png](Screenshot.png)
+
+![Screenshot_1.png](Screenshot_1.png)
+
 ---
 
 ##  Für Entwickler: 
